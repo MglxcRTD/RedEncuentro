@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Nuevo Objeto</title>
+</head>
+<body>
+    <h1>Agregar objeto perdido</h1>
+    <form th:action="@{/guardar}" th:object="${objeto}" method="post">
+        Nombre: <input type="text" th:field="*{nombre}" /><br>
+        Descripción: <input type="text" th:field="*{descripcion}" /><br>
+        Lugar: <input type="text" th:field="*{lugar}" /><br>
+        Fecha: <input type="date" th:field="*{fecha}" /><br>
+        <button type="submit">Guardar</button>
+    </form>
+    <div th:if="${mensaje}" th:text="${mensaje}" style="color:green;"></div>
+
+</body>
+</html>
