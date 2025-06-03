@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Objetos Perdidos</title>
+</head>
+<body>
+    <h1>Lista de objetos perdidos</h1>
+    <a href="/nuevo">Agregar nuevo objeto</a>
+    <ul>
+        <th:block th:each="objeto : ${objetos}">
+            <li>
+                <strong th:text="${objeto.nombre}"></strong> - 
+                <span th:text="${objeto.descripcion}"></span>
+            </li>
+        </th:block>
+    </ul>
+</body>
+</html>

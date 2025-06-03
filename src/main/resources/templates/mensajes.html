@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mensajería Mejorada</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #ece5dd;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header, footer {
+      background: #f0f2f5;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ccc;
+      user-select: none;
+    }
+    footer {
+      border-top: 1px solid #ccc;
+      border-bottom: none;
+      margin-top: auto;
+      font-size: 0.95em;
+      color: #555;
+    }
+    .header-left, .header-right {
+      display: flex;
+      gap: 15px;
+      font-size: 1em;
+    }
+    .header-left button, .header-right button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #4169e1;
+      padding: 5px 10px;
+      border-radius: 5px;
+      transition: background-color 0.2s ease;
+      font-weight: 600;
+    }
+    .header-left button:hover, .header-right button:hover {
+      background-color: #d0e0ff;
+    }
+
+    .app {
+      display: flex;
+      flex: 1;
+      background: #fff;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px auto;
+      width: 1250px;
+      max-height: calc(100vh - 120px);
+    }
+
+    .sidebar {
+      width: 300px;
+      background: #f0f2f5;
+      border-right: 1px solid #ddd;
+      overflow-y: auto;
+    }
+    .chat-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #ddd;
+      transition: background-color 0.2s ease;
+    }
+    .chat-item:hover {
+      background: #B0E0E6;
+    }
+    .chat-item img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      margin-right: 10px;
+      user-select: none;
+    }
+    .chat-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-info .name {
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chat-info .last-message {
+      font-size: 0.9em;
+      color: #373636;
+      user-select: none;
+    }
+
+    .chat-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #92bfc5;
+    }
+    .chat-header {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      background: #f8f9fa;
+      user-select: none;
+    }
+    .chat-header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .chat-header .name {
+      font-weight: bold;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #e0e8e9;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      max-width: 60%;
+      padding: 10px 14px;
+      margin: 5px 0;
+      border-radius: 12px;
+      font-size: 0.95em;
+      word-wrap: break-word;
+    }
+    .sent {
+      align-self: flex-end;
+      background: #ffffff; /* Color blanco */
+    }
+    .received {
+      align-self: flex-start;
+      background: #fff;
+    }
+    .audio {
+      background: none !important;
+      padding: 0 !important;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background: #f0f2f5;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+      font-size: 1em;
+      margin-right: 10px;
+    }
+    .input-area button {
+      background: #4169e1;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 20px;
+      color: #fff;
+      cursor: pointer;
+      position: relative;
+      font-size: 1.2em;
+      margin-left: 5px;
+      user-select: none;
+      transition: background-color 0.2s ease;
+    }
+    .input-area button:hover {
+      background: #3655c9;
+    }
+
+    .message audio {
+      width: 100%;
+      outline: none;
+      border-radius: 12px;
+      background: transparent;
+    }
+
+    /* Modal styles */
+    #profileModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    #profileModal.active {
+      display: flex;
+    }
+    #profileModalContent {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    #profileModalContent img {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      margin-bottom: 15px;
+    }
+    #profileModalContent h2 {
+      margin: 5px 0 10px 0;
+      font-weight: 700;
+    }
+    #profileModalContent .stars {
+      margin: 10px 0;
+      font-size: 1.2em;
+      color: #f5a623; /* golden stars */
+      user-select: none;
+    }
+    #profileModalContent .info {
+      font-size: 0.95em;
+      color: #444;
+      margin-bottom: 15px;
+    }
+    #profileModalContent .desc {
+      font-size: 0.9em;
+      color: #666;
+      white-space: pre-wrap;
+      user-select: text;
+    }
+    #profileModalClose {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5em;
+      color: #888;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s ease;
+    }
+    #profileModalClose:hover {
+      color: #000;
+    }
+
+     /* Animación botón micrófono cuando graba */
+    .recording {
+      animation: pulse 1s infinite alternate;
+      background-color: #e74c3c !important;
+      box-shadow: 0 0 10px #e74c3c;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 5px #e74c3c; }
+      100% { box-shadow: 0 0 20px #e74c3c; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <button th:onclick="|window.location.href='https://tu-sitio-menu.com'|">☰ Menú</button>
+    <button th:onclick="|window.location.href='https://tu-sitio-objetos.com'|">Objetos</button>
+    </div>
+    <div class="header-right">
+      <button th:onclick="|window.location.href='https://tu-sitio-mi-perfil.com'|">👤 Mi perfil</button>
+    <button th:onclick="|window.location.href='https://tu-sitio-ajustes.com'|">Ajustes</button>
+    </div>
+  </header>
+
+ <div class="app">
+  <div class="sidebar" id="chatList">
+    <div th:each="contacto : ${contactos}" class="chat-item" 
+         th:onclick="|selectChat('${contacto}')|">
+      <img th:src="${avatares[contacto]}" th:alt="${contacto}" />
+      <div class="chat-info">
+        <div class="name" th:text="${contacto}" 
+             th:onclick="|openProfile(event, '${contacto}')|"></div>
+        <div class="last-message" th:text="${lastMessages[contacto]}"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-panel">
+    <div class="chat-header">
+      <img th:id="'chatAvatar'" th:src="${avatares[currentChat]}" 
+           th:alt="${currentChat}" th:onclick="|openProfile(null, '${currentChat}')|" />
+      <div class="name" th:id="'chatName'" th:text="${currentChat}" 
+           th:onclick="|openProfile(null, '${currentChat}')|"></div>
+    </div>
+
+    <div class="messages" id="chatBox">
+      <div th:each="msg : ${mensajes}" th:class="'message ' + (${msg.esAudio} ? 'audio' : (msg.emisor == usuarioActual ? 'sent' : 'received'))">
+        <audio th:if="${msg.esAudio}" controls th:src="@{${msg.contenido}}"></audio>
+        <span th:if="${!msg.esAudio}" th:text="${msg.contenido}"></span>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off" />
+      <button onclick="sendMessage()" title="Enviar mensaje">➤</button>
+      <button id="micBtn" 
+              onmousedown="startRecording()" 
+              onmouseup="stopRecording()" 
+              onmouseleave="stopRecording()" 
+              title="Mantén presionado para grabar audio">🎤</button>
+    </div>
+  </div>
+</div>
+
+
+  <footer>
+    <div>⚠️ Informar de un error</div>
+  </footer>
+
+  <div id="profileModal">
+  <div id="profileModalContent">
+    <span id="profileModalClose" onclick="closeProfile()">&times;</span>
+    <img id="modalAvatar" th:src="${avatares[modalCurrent]}" alt="Foto perfil" />
+    <h2 id="modalName" th:text="${modalCurrent}">Nombre</h2>
+    <div class="stars" id="modalStars" th:utext="${renderStars(profileData[modalCurrent].stars)}">★★★★★</div>
+    <div class="info" id="modalCreated" th:text="'Creado: ' + ${profileData[modalCurrent].created}">Creado: 01/01/2020</div>
+    <div class="desc" id="modalObjectDesc" th:text="${profileData[modalCurrent].objectDesc}">Descripción del objeto</div>
+  </div>
+</div>
+
+  <script>
+    // Datos iniciales
+    let currentChat = 'Juan';
+
+    const avatars = {
+      'Juan': 'https://randomuser.me/api/portraits/men/10.jpg',
+      'María': 'https://randomuser.me/api/portraits/women/20.jpg',
+      'Carlos': 'https://randomuser.me/api/portraits/men/30.jpg'
+    };
+
+    // Datos para perfil extendido
+    const profileData = {
+      'Juan': {
+        stars: 4,
+        created: '15/03/2019',
+        objectDesc: 'Buscando bicicleta de montaña en buen estado.'
+      },
+      'María': {
+        stars: 5,
+        created: '22/11/2021',
+        objectDesc: 'Ofrece clases de guitarra para principiantes.'
+      },
+      'Carlos': {
+        stars: 3,
+        created: '10/07/2018',
+        objectDesc: 'Vendo cámara réflex usada, excelente estado.'
+      }
+    };
+
+    // Mensajes del chat (texto y audio)
+    const chatMessages = {
+      'Juan': [{ text: 'Hola, ¿cómo estás?', type: 'received' }],
+      'María': [{ text: '¿Nos vemos mañana?', type: 'received' }],
+      'Carlos': [{ text: 'Envíame el archivo', type: 'received' }]
+    };
+
+    function renderMessages(name) {
+      const messages = chatMessages[name] || [];
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = '';
+
+      messages.forEach(m => {
+        const div = document.createElement('div');
+        div.classList.add('message');
+        div.classList.add(m.type);
+
+        if(m.type === 'audio'){
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = m.src;
+          div.classList.add('audio');
+          div.appendChild(audio);
+        } else {
+          div.textContent = m.text;
+        }
+        chatBox.appendChild(div);
+      });
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Seleccionar chat y cambiar cabecera + mensajes
+    function selectChat(name) {
+      currentChat = name;
+      document.getElementById('chatName').textContent = name;
+      document.getElementById('chatAvatar').src = avatars[name];
+      renderMessages(name);
+    }
+
+    // Enviar mensaje de texto
+     function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if(!text) return;
+      if(!chatMessages[currentChat]) chatMessages[currentChat] = [];
+
+      chatMessages[currentChat].push({ text, type: 'sent' });
+      input.value = '';
+          input.focus(); // Devuelve el foco al campo de entrada
+      renderMessages(currentChat);
+
+       fetch('http://localhost:8080/chat/api', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      emisor: 'Yo', // Puedes reemplazar con el nombre del usuario actual
+      receptor: currentChat,
+      contenido: text,
+      esAudio: false
+    })
+  }).then(res => {
+    if (!res.ok) {
+      console.error("Error al guardar el mensaje en el backend.");
+    }
+    return res.json();
+  }).then(data => {
+    console.log("Mensaje guardado:", data);
+  }).catch(err => {
+    console.error("Error de red o backend:", err);
+  });
+    }
+
+    // Grabación audio Push-to-talk
+    let mediaRecorder;
+    let audioChunks = [];
+
+    const micBtn = document.getElementById('micBtn');
+
+    async function startRecording() {
+      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Tu navegador no soporta grabación de audio.');
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.start();
+
+        micBtn.classList.add('recording');
+
+        mediaRecorder.ondataavailable = e => {
+          audioChunks.push(e.data);
+        }
+
+        mediaRecorder.onstop = e => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          if(!chatMessages[currentChat]) chatMessages[currentChat] = [];
+          chatMessages[currentChat].push({ type: 'audio', src: audioUrl });
+
+          renderMessages(currentChat);
+          stream.getTracks().forEach(t => t.stop());
+          micBtn.classList.remove('recording');
+        }
+      } catch (err) {
+        alert('No se pudo acceder al micrófono.');
+      }
+    }
+
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if(e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+    function stopRecording() {
+      if(mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    }
+
+
+    // Modal de perfil
+    const modal = document.getElementById('profileModal');
+    const modalAvatar = document.getElementById('modalAvatar');
+    const modalName = document.getElementById('modalName');
+    const modalStars = document.getElementById('modalStars');
+    const modalCreated = document.getElementById('modalCreated');
+    const modalObjectDesc = document.getElementById('modalObjectDesc');
+    const modalCloseBtn = document.getElementById('profileModalClose');
+
+    function openProfile(event, name) {
+      if(event) event.stopPropagation();
+      if(!profileData[name]) return;
+      modalAvatar.src = avatars[name];
+      modalName.textContent = name;
+      modalStars.innerHTML = renderStars(profileData[name].stars);
+      modalCreated.textContent = 'Creado: ' + profileData[name].created;
+      modalObjectDesc.textContent = profileData[name].objectDesc;
+      modal.classList.add('active');
+    }
+
+    function closeProfile() {
+      modal.classList.remove('active');
+    }
+
+    modalCloseBtn.addEventListener('click', closeProfile);
+    modal.addEventListener('click', (e) => {
+      if(e.target === modal) closeProfile();
+    });
+
+    // Renderizar estrellas (de 1 a 5)
+    function renderStars(n) {
+      const fullStar = '★';
+      const emptyStar = '☆';
+      return fullStar.repeat(n) + emptyStar.repeat(5 - n);
+    }
+
+    // Inicialización
+    selectChat(currentChat);
+
+    function enviarMensaje(text) {
+  fetch('/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      emisor: usuario1,
+      receptor: usuario2,
+      contenido: text,
+      esAudio: false
+    })
+  })
+  .then(res => res.json())
+  .then(mensajeGuardado => {
+    console.log('Mensaje guardado', mensajeGuardado);
+    cargarMensajes(); // recarga mensajes después de enviar
+  })
+  .catch(console.error);
+}
+
+const usuario1 = 'user'; // usuario actual, cambiar según login
+const usuario2 = 'clarita'; // receptor seleccionado
+
+function cargarMensajes() {
+  fetch(`/chat/api${usuario1}/${usuario2}`)
+    .then(res => res.json())
+    .then(mensajes => {
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = ''; // limpia antes
+      mensajes.forEach(mensaje => {
+        const div = document.createElement('div');
+        div.className = mensaje.emisor === usuario1 ? 'message sent' : 'message received';
+        if (mensaje.esAudio) {
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = mensaje.contenido; // asumiendo URL válida
+          div.appendChild(audio);
+        } else {
+          div.textContent = mensaje.contenido;
+        }
+        chatBox.appendChild(div);
+      });
+    })
+    .catch(console.error);
+}
+
+// Llamar para cargar mensajes al iniciar la vista
+cargarMensajes();
+
+
+  </script>
+
+</body>
+</html>
