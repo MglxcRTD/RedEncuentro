@@ -6,33 +6,61 @@ import jakarta.persistence.*;
 @Table(name = "usuario")
 public class Usuario {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_usuario")
-    private Long id_usuario;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id_usuario")
+	private Long id_usuario;
 
-    private String nombre;
+	private String nombre;
 
-    @Column(unique = true)
-    private String email;
+	@Column(unique = true)
+	private String email;
 
-    @Column(name = "contraseña")  // Mantiene la ñ en la DB
-    private String contrasena;      // Sin ñ en Java
+	@Column(name = "contrasena") // Mantiene la ñ en la DB
+	private String contrasena;
 
-    // Getters y setters
-    public Long getId() { return id_usuario; }
+	@Column(name = "imagen_perfil")
+	private String imagenPerfil;
+	// Sin ñ en Java
 
-    public void setId(Long id) { this.id_usuario = id; }
+	// Getters y setters
+	public Long getId() {
+		return id_usuario;
+	}
 
-    public String getNombre() { return nombre; }
+	public void setId(Long id) {
+		this.id_usuario = id;
+	}
 
-    public void setNombre(String nombre) { this.nombre = nombre; }
+	public String getNombre() {
+		return nombre;
+	}
 
-    public String getEmail() { return email; }
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
 
-    public void setEmail(String email) { this.email = email; }
+	public String getEmail() {
+		return email;
+	}
 
-    public String getContrasena() { return contrasena; }
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
-    public void setContrasena(String contrasena) { this.contrasena = contrasena; }
+	public String getContrasena() {
+		return contrasena;
+	}
+
+	public void setContrasena(String contrasena) {
+		this.contrasena = contrasena;
+	}
+
+	public String getImagenPerfil() {
+		return imagenPerfil;
+	}
+
+	public void setImagenPerfil(String imagenPerfil) {
+		this.imagenPerfil = imagenPerfil;
+	}
 }
