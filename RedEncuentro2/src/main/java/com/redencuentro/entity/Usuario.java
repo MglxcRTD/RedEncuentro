@@ -16,7 +16,7 @@ public class Usuario {
     @Column(unique = true)
     private String email;
 
-    @Column(name = "contraseña")  // Mantiene la ñ en la DB
+    @Column(name = "contrasena")  // Mantiene la ñ en la DB
     private String contrasena;      // Sin ñ en Java
 
     // Getters y setters

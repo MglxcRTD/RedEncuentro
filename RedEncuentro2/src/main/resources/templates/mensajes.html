@@ -1,604 +1,666 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mensajería Mejorada</title>
+  <title>Mini Messenger Completo</title>
   <style>
     * {
       box-sizing: border-box;
     }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #ece5dd;
-      display: flex;
-      flex-direction: column;
+    body, html {
+      margin: 0; padding: 0;
       height: 100vh;
-    }
-    header, footer {
-      background: #f0f2f5;
-      padding: 10px 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #e0e0e0; /* fondo gris claro para diferenciar */
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #ccc;
-      user-select: none;
-    }
-    footer {
-      border-top: 1px solid #ccc;
-      border-bottom: none;
-      margin-top: auto;
-      font-size: 0.95em;
-      color: #555;
-    }
-    .header-left, .header-right {
-      display: flex;
-      gap: 15px;
-      font-size: 1em;
-    }
-    .header-left button, .header-right button {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: #4169e1;
-      padding: 5px 10px;
-      border-radius: 5px;
-      transition: background-color 0.2s ease;
-      font-weight: 600;
-    }
-    .header-left button:hover, .header-right button:hover {
-      background-color: #d0e0ff;
-    }
-
-    .app {
-      display: flex;
-      flex: 1;
-      background: #fff;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      border-radius: 10px;
+      justify-content: center; /* centra horizontalmente */
+      align-items: center; /* altura completa */
       overflow: hidden;
-      margin: 10px auto;
-      width: 1250px;
-      max-height: calc(100vh - 120px);
     }
 
-    .sidebar {
-      width: 300px;
-      background: #f0f2f5;
-      border-right: 1px solid #ddd;
-      overflow-y: auto;
-    }
-    .chat-item {
+    #topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background-color: #1877f2;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+#topbar button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  margin-right: 15px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#topbar button:hover {
+  text-decoration: underline;
+}
+
+    #app-container {
+      margin-top: 50px;
+      width: 900px;  /* ancho máximo fijo */
+      height: 90vh;  /* altura menos un poco para respirar */
+      background-color: white;
       display: flex;
-      align-items: center;
-      padding: 12px;
-      cursor: pointer;
-      border-bottom: 1px solid #ddd;
-      transition: background-color 0.2s ease;
-    }
-    .chat-item:hover {
-      background: #B0E0E6;
-    }
-    .chat-item img {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      margin-right: 10px;
-      user-select: none;
-    }
-    .chat-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .chat-info .name {
-      font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-    }
-    .chat-info .last-message {
-      font-size: 0.9em;
-      color: #373636;
-      user-select: none;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      overflow: hidden;
     }
 
-    .chat-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #92bfc5;
-    }
-    .chat-header {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      background: #f8f9fa;
-      user-select: none;
-    }
-    .chat-header img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-right: 10px;
-      cursor: pointer;
-    }
-    .chat-header .name {
-      font-weight: bold;
-      font-size: 1.1em;
-      cursor: pointer;
-    }
-
-    .messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      background: #e0e8e9;
-      display: flex;
-      flex-direction: column;
-    }
-    .message {
-      max-width: 60%;
-      padding: 10px 14px;
-      margin: 5px 0;
-      border-radius: 12px;
-      font-size: 0.95em;
-      word-wrap: break-word;
-    }
-    .sent {
-      align-self: flex-end;
-      background: #ffffff; /* Color blanco */
-    }
-    .received {
-      align-self: flex-start;
+    #sidebar {
+      width: 320px;
       background: #fff;
-    }
-    .audio {
-      background: none !important;
-      padding: 0 !important;
-    }
-
-    .input-area {
+      border-right: 1px solid #ddd;
       display: flex;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-      background: #f0f2f5;
+      flex-direction: column;
+      height: 100%;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.05);
     }
-    .input-area input {
-      flex: 1;
-      padding: 10px 15px;
+    #sidebar header {
+      padding: 20px 15px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #1877f2;
+      color: white;
+    }
+    #new-chat-form {
+      display: flex;
+      padding: 12px 15px;
+      background-color: #f5f6f7;
+      border-bottom: 1px solid #ddd;
+    }
+    #new-chat-form input {
+      flex-grow: 1;
+      padding: 8px 12px;
+      font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 20px;
       outline: none;
-      font-size: 1em;
-      margin-right: 10px;
+      transition: border-color 0.2s;
     }
-    .input-area button {
-      background: #4169e1;
+    #new-chat-form input:focus {
+      border-color: #1877f2;
+      box-shadow: 0 0 5px #1877f2;
+    }
+    #new-chat-form button {
+      margin-left: 10px;
+      padding: 8px 15px;
+      background-color: #1877f2;
       border: none;
-      padding: 8px 12px;
       border-radius: 20px;
-      color: #fff;
+      color: white;
+      font-size: 1.2rem;
       cursor: pointer;
-      position: relative;
-      font-size: 1.2em;
-      margin-left: 5px;
-      user-select: none;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.2s;
     }
-    .input-area button:hover {
-      background: #3655c9;
+    #new-chat-form button:hover {
+      background-color: #145dbf;
+    }
+    #chat-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      background-color: #fff;
     }
 
+    .chat-initial {
+  width: 36px;
+  height: 36px;
+  background-color: #1877f2;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+    .chat-item {
+      padding: 15px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .chat-item:hover {
+      background-color: #f0f2f5;
+    }
+    .chat-item.active {
+      background-color: #1877f2;
+      color: white;
+      font-weight: 600;
+    }
+    #main {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background-color: #fff;
+    }
+    #chat-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px 25px;
+  border-bottom: 1px solid #ddd;
+  font-size: 1.3rem;
+  font-weight: 700;
+  background-color: #fafafa;
+  color: #333;
+}
+#chat-header .chat-initial {
+  width: 40px;
+  height: 40px;
+  font-size: 1.4rem;
+}
+
+    #chat-messages {
+      flex-grow: 1;
+      padding: 25px 25px;
+      overflow-y: auto;
+      color: #333;
+      font-size: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .message {
+      max-width: 60%;
+      padding: 10px 15px;
+      background: #e4e6eb;
+      border-radius: 15px;
+      word-wrap: break-word;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    }
+    .message.sent {
+      background: #1877f2;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+    .message.received {
+      background: #e4e6eb;
+      color: #050505;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+    /* Media attachments styles */
+    .message img {
+      max-width: 100%;
+      border-radius: 10px;
+      display: block;
+      margin-top: 5px;
+      cursor: pointer;
+    }
     .message audio {
+      margin-top: 5px;
       width: 100%;
       outline: none;
-      border-radius: 12px;
-      background: transparent;
-    }
-
-    /* Modal styles */
-    #profileModal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-    #profileModal.active {
-      display: flex;
-    }
-    #profileModalContent {
-      background: white;
       border-radius: 10px;
-      padding: 25px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      position: relative;
     }
-    #profileModalContent img {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      margin-bottom: 15px;
+
+    /* Input area */
+    #message-form {
+      display: flex;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
+      background-color: #fafafa;
+      gap: 10px;
+      align-items: center;
     }
-    #profileModalContent h2 {
-      margin: 5px 0 10px 0;
+    #message-input {
+      flex-grow: 1;
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #message-input:focus {
+      border-color: #1877f2;
+      box-shadow: 0 0 5px #1877f2;
+    }
+    button.send-btn {
+      background-color: #1877f2;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      color: white;
       font-weight: 700;
-    }
-    #profileModalContent .stars {
-      margin: 10px 0;
-      font-size: 1.2em;
-      color: #f5a623; /* golden stars */
-      user-select: none;
-    }
-    #profileModalContent .info {
-      font-size: 0.95em;
-      color: #444;
-      margin-bottom: 15px;
-    }
-    #profileModalContent .desc {
-      font-size: 0.9em;
-      color: #666;
-      white-space: pre-wrap;
-      user-select: text;
-    }
-    #profileModalClose {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 1.5em;
-      color: #888;
       cursor: pointer;
-      user-select: none;
-      transition: color 0.2s ease;
+      transition: background-color 0.2s;
     }
-    #profileModalClose:hover {
-      color: #000;
+    button.send-btn:disabled {
+      background-color: #8ab4f8;
+      cursor: not-allowed;
+    }
+    button.send-btn:hover:not(:disabled) {
+      background-color: #145dbf;
+    }
+    /* Attachment buttons */
+    #attachments {
+      display: flex;
+      gap: 8px;
+    }
+    .attach-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.4rem;
+      color: #1877f2;
+      transition: color 0.2s;
+    }
+    .attach-btn:hover {
+      color: #145dbf;
     }
 
-     /* Animación botón micrófono cuando graba */
-    .recording {
-      animation: pulse 1s infinite alternate;
-      background-color: #e74c3c !important;
-      box-shadow: 0 0 10px #e74c3c;
+    /* Sticker picker panel */
+    #sticker-picker {
+      position: absolute;
+      bottom: 70px;
+      right: 25px;
+      background: white;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      border-radius: 10px;
+      padding: 10px;
+      display: none;
+      z-index: 10;
+      width: 200px;
+      max-height: 150px;
+      overflow-y: auto;
+      flex-wrap: wrap;
+      gap: 10px;
     }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 5px #e74c3c; }
-      100% { box-shadow: 0 0 20px #e74c3c; }
+    #sticker-picker img {
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: transform 0.15s;
+    }
+    #sticker-picker img:hover {
+      transform: scale(1.1);
     }
 
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="header-left">
-      <button th:onclick="|window.location.href='https://tu-sitio-menu.com'|">☰ Menú</button>
-    <button th:onclick="|window.location.href='https://tu-sitio-objetos.com'|">Objetos</button>
-    </div>
-    <div class="header-right">
-      <button th:onclick="|window.location.href='https://tu-sitio-mi-perfil.com'|">👤 Mi perfil</button>
-    <button th:onclick="|window.location.href='https://tu-sitio-ajustes.com'|">Ajustes</button>
-    </div>
-  </header>
-
- <div class="app">
-  <div class="sidebar" id="chatList">
-  <div th:each="contacto : ${contactos}" class="chat-item" 
-       th:attr="data-contacto=${contacto}"
-       onclick="selectChat(this.dataset.contacto)">
-    <img th:src="${avatares[contacto]}" th:alt="${contacto}" />
-    <div class="chat-info">
-      <div class="name" th:text="${contacto}" 
-           th:attr="data-contacto=${contacto}"
-           onclick="openProfile(event, this.dataset.contacto)"></div>
-      <div class="last-message" th:text="${lastMessages[contacto]}"></div>
+  <div id="topbar">
+    <div>
+      <button id="btn-menu">☰ Menú</button>
+      <button id="btn-profile">👤 Perfil</button>
+      <button id="btn-settings">⚙️ Ajustes</button>
     </div>
   </div>
-</div>
-
-  </div>
-
-  <div class="chat-panel">
-    <div class="chat-header">
-  <img th:id="'chatAvatar'" th:src="${avatares[currentChat]}" 
-       th:alt="${currentChat}" 
-       th:attr="data-contacto=${currentChat}" 
-       onclick="openProfile(null, this.dataset.contacto)" />
-  <div class="name" th:id="'chatName'" th:text="${currentChat}" 
-       th:attr="data-contacto=${currentChat}" 
-       onclick="openProfile(null, this.dataset.contacto)"></div>
-</div>
-
+  
+  <div id="app-container">
+    <div id="sidebar">
+      <header>
+        Chats
+      </header>
+      <form id="new-chat-form" autocomplete="off">
+        <input
+          id="new-chat-name"
+          type="text"
+          placeholder="Crear nuevo chat..."
+          required
+          minlength="2"
+          maxlength="30"
+        />
+        <button type="submit" title="Crear chat">+</button>
+      </form>
+      <div id="chat-list"></div>
     </div>
 
-    <div class="messages" id="chatBox">
-      <div th:each="msg : ${mensajes}" th:class="'message ' + (${msg.esAudio} ? 'audio' : (msg.emisor == usuarioActual ? 'sent' : 'received'))">
-        <audio th:if="${msg.esAudio}" controls th:src="@{${msg.contenido}}"></audio>
-        <span th:if="${!msg.esAudio}" th:text="${msg.contenido}"></span>
+    <div id="main">
+      <div id="chat-header">Selecciona un chat</div>
+      <div id="chat-messages">
+        <em>No hay chats abiertos</em>
       </div>
-    </div>
-
-    <div class="input-area">
-      <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off" />
-      <button onclick="sendMessage()" title="Enviar mensaje">➤</button>
-      <button id="micBtn" 
-              onmousedown="startRecording()" 
-              onmouseup="stopRecording()" 
-              onmouseleave="stopRecording()" 
-              title="Mantén presionado para grabar audio">🎤</button>
+      <form id="message-form" autocomplete="off" style="display:none;">
+        <div id="attachments">
+          <button type="button" id="btn-stickers" class="attach-btn" title="Stickers">😊</button>
+          <label for="input-image" class="attach-btn" title="Adjuntar imagen" style="cursor:pointer;">🖼️</label>
+          <input type="file" id="input-image" accept="image/*" style="display:none" />
+          <label for="input-audio" class="attach-btn" title="Adjuntar audio" style="cursor:pointer;">🎤</label>
+          <input type="file" id="input-audio" accept="audio/*" style="display:none" />
+        </div>
+        <input
+          id="message-input"
+          type="text"
+          placeholder="Escribe un mensaje..."
+          autocomplete="off"
+        />
+        <button type="submit" class="send-btn" disabled>Enviar</button>
+      </form>
     </div>
   </div>
-</div>
 
-
-  <footer>
-    <div>⚠️ Informar de un error</div>
-  </footer>
-
-  <div id="profileModal">
-  <div id="profileModalContent">
-    <span id="profileModalClose" onclick="closeProfile()">&times;</span>
-    <img id="modalAvatar" th:src="${avatares[modalCurrent]}" alt="Foto perfil" />
-    <h2 id="modalName" th:text="${modalCurrent}">Nombre</h2>
-    <div class="stars" id="modalStars" th:utext="${renderStars(profileData[modalCurrent].stars)}">★★★★★</div>
-    <div class="info" id="modalCreated" th:text="'Creado: ' + ${profileData[modalCurrent].created}">Creado: 01/01/2020</div>
-    <div class="desc" id="modalObjectDesc" th:text="${profileData[modalCurrent].objectDesc}">Descripción del objeto</div>
+  <div id="sticker-picker">
+    <!-- Stickers aquí -->
   </div>
-</div>
 
-  <script>
-    // Datos iniciales
-    let currentChat = 'Juan';
+<script>
+  // Elementos principales
+  document.getElementById('btn-menu').onclick = () => {
+  window.location.href = 'menu.html';
+};
 
-    const avatars = {
-      'Juan': 'https://randomuser.me/api/portraits/men/10.jpg',
-      'María': 'https://randomuser.me/api/portraits/women/20.jpg',
-      'Carlos': 'https://randomuser.me/api/portraits/men/30.jpg'
-    };
+document.getElementById('btn-profile').onclick = () => {
+  window.location.href = 'perfil.html';
+};
 
-    // Datos para perfil extendido
-    const profileData = {
-      'Juan': {
-        stars: 4,
-        created: '15/03/2019',
-        objectDesc: 'Buscando bicicleta de montaña en buen estado.'
-      },
-      'María': {
-        stars: 5,
-        created: '22/11/2021',
-        objectDesc: 'Ofrece clases de guitarra para principiantes.'
-      },
-      'Carlos': {
-        stars: 3,
-        created: '10/07/2018',
-        objectDesc: 'Vendo cámara réflex usada, excelente estado.'
-      }
-    };
+document.getElementById('btn-settings').onclick = () => {
+  window.location.href = 'ajustes.html'; // Asegúrate de que el archivo exista
+};
 
-    // Mensajes del chat (texto y audio)
-    const chatMessages = {
-      'Juan': [{ text: 'Hola, ¿cómo estás?', type: 'received' }],
-      'María': [{ text: '¿Nos vemos mañana?', type: 'received' }],
-      'Carlos': [{ text: 'Envíame el archivo', type: 'received' }]
-    };
+  const chatListEl = document.getElementById('chat-list');
+  const chatHeaderEl = document.getElementById('chat-header');
+  const chatMessagesEl = document.getElementById('chat-messages');
+  const newChatForm = document.getElementById('new-chat-form');
+  const newChatNameInput = document.getElementById('new-chat-name');
 
-    function renderMessages(name) {
-      const messages = chatMessages[name] || [];
-      const chatBox = document.getElementById('chatBox');
-      chatBox.innerHTML = '';
+  const messageForm = document.getElementById('message-form');
+  const messageInput = document.getElementById('message-input');
+  const sendBtn = messageForm.querySelector('.send-btn');
 
-      messages.forEach(m => {
-        const div = document.createElement('div');
-        div.classList.add('message');
-        div.classList.add(m.type);
+  const btnStickers = document.getElementById('btn-stickers');
+  const stickerPicker = document.getElementById('sticker-picker');
 
-        if(m.type === 'audio'){
+  const inputImage = document.getElementById('input-image');
+  const inputAudio = document.getElementById('input-audio');
+
+  let chats = [];
+  let activeChatId = null;
+
+  // Lista de stickers simples (URL libres o emojis)
+  const stickers = [
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f600.png', // 😀
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f602.png', // 😂
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f60d.png', // 😍
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f618.png', // 😘
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f44d.png', // 👍
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f4af.png', // 💯
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f389.png', // 🎉
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f436.png', // 🐶
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f431.png', // 🐱
+    'https://twemoji.maxcdn.com/v/latest/72x72/1f47b.png', // 👻
+  ];
+
+  // Render stickers en picker
+  function renderStickers() {
+    stickerPicker.innerHTML = '';
+    stickers.forEach(url => {
+      const img = document.createElement('img');
+      img.src = url;
+      img.title = "Sticker";
+      img.onclick = () => {
+        sendMessage({ type: 'sticker', content: url });
+        stickerPicker.style.display = 'none';
+      };
+      stickerPicker.appendChild(img);
+    });
+  }
+  renderStickers();
+
+  // Render lista de chats
+  function renderChats() {
+    chatListEl.innerHTML = '';
+    if (chats.length === 0) {
+      chatListEl.innerHTML = `<p style="padding:20px; color:#999; font-style: italic;">No hay chats disponibles</p>`;
+      chatHeaderEl.textContent = 'Selecciona un chat';
+      chatMessagesEl.innerHTML = '<em>No hay chats abiertos</em>';
+      messageForm.style.display = 'none';
+      return;
+    }
+    chats.forEach(chat => {
+  const chatItem = document.createElement('div');
+  chatItem.className = 'chat-item' + (chat.id === activeChatId ? ' active' : '');
+
+  // Crear el círculo con la inicial
+  const initialEl = document.createElement('div');
+  initialEl.className = 'chat-initial';
+  initialEl.textContent = chat.name.charAt(0).toUpperCase();
+
+  // Crear el texto del nombre
+  const nameEl = document.createElement('div');
+  nameEl.textContent = chat.name;
+  nameEl.style.flexGrow = '1';
+
+  chatItem.appendChild(initialEl);
+  chatItem.appendChild(nameEl);
+
+  chatItem.onclick = () => {
+    activeChatId = chat.id;
+    renderChats();
+    renderActiveChat();
+  };
+
+  chatListEl.appendChild(chatItem);
+});
+  }
+
+  // Render chat activo y mensajes
+  function renderActiveChat() {
+    if (!activeChatId) {
+      chatHeaderEl.textContent = 'Selecciona un chat';
+      chatMessagesEl.innerHTML = '<em>No hay chats abiertos</em>';
+      messageForm.style.display = 'none';
+      return;
+    }
+    const activeChat = chats.find(c => c.id === activeChatId);
+    if (!activeChat) return;
+
+    chatHeaderEl.innerHTML = '';
+chatMessagesEl.innerHTML = '';
+
+// Crear elemento para la inicial en círculo
+const initialEl = document.createElement('div');
+initialEl.className = 'chat-initial';
+initialEl.textContent = activeChat.name.charAt(0).toUpperCase();
+
+// Crear elemento para el nombre del contacto
+const nameEl = document.createElement('div');
+nameEl.textContent = activeChat.name;
+
+// Añadir ambos al header
+chatHeaderEl.appendChild(initialEl);
+chatHeaderEl.appendChild(nameEl);
+    if (activeChat.messages.length === 0) {
+      chatMessagesEl.innerHTML = '<em>No hay mensajes</em>';
+    } else {
+      activeChat.messages.forEach(msg => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message ' + (msg.sent ? 'sent' : 'received');
+        if (msg.type === 'text') {
+          msgDiv.textContent = msg.content;
+        } else if (msg.type === 'image') {
+          const img = document.createElement('img');
+          img.src = msg.content;
+          img.alt = "Imagen enviada";
+          msgDiv.appendChild(img);
+        } else if (msg.type === 'audio') {
           const audio = document.createElement('audio');
           audio.controls = true;
-          audio.src = m.src;
-          div.classList.add('audio');
-          div.appendChild(audio);
-        } else {
-          div.textContent = m.text;
+          audio.src = msg.content;
+          msgDiv.appendChild(audio);
+        } else if (msg.type === 'sticker') {
+          const img = document.createElement('img');
+          img.src = msg.content;
+          img.alt = "Sticker";
+          msgDiv.appendChild(img);
         }
-        chatBox.appendChild(div);
+        chatMessagesEl.appendChild(msgDiv);
       });
-
-      chatBox.scrollTop = chatBox.scrollHeight;
     }
+    messageForm.style.display = 'flex';
+    scrollToBottom();
+  }
 
-    // Seleccionar chat y cambiar cabecera + mensajes
-    function selectChat(name) {
-      currentChat = name;
-      document.getElementById('chatName').textContent = name;
-      document.getElementById('chatAvatar').src = avatars[name];
-      renderMessages(name);
+  // Scroll para que siempre muestre el último mensaje
+  function scrollToBottom() {
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  }
+
+  // Crear nuevo chat
+  newChatForm.onsubmit = e => {
+    e.preventDefault();
+    const name = newChatNameInput.value.trim();
+    if (name.length < 2 || name.length > 30) {
+      alert('El nombre del chat debe tener entre 2 y 30 caracteres.');
+      return;
     }
+    const newChat = {
+      id: Date.now().toString(),
+      name,
+      messages: [],
+    };
+    chats.push(newChat);
+    activeChatId = newChat.id;
+    newChatNameInput.value = '';
+    renderChats();
+    renderActiveChat();
+  };
 
-    // Enviar mensaje de texto
-     function sendMessage() {
-      const input = document.getElementById('messageInput');
-      const text = input.value.trim();
-      if(!text) return;
-      if(!chatMessages[currentChat]) chatMessages[currentChat] = [];
+  // Detecta texto para habilitar botón enviar
+  messageInput.oninput = () => {
+    sendBtn.disabled = messageInput.value.trim() === '';
+  };
 
-      chatMessages[currentChat].push({ text, type: 'sent' });
-      input.value = '';
-          input.focus(); // Devuelve el foco al campo de entrada
-      renderMessages(currentChat);
+  // Enviar mensaje
+  messageForm.onsubmit = e => {
+    e.preventDefault();
+    const text = messageInput.value.trim();
+    if (!text) return;
+    sendMessage({ type: 'text', content: text });
+    messageInput.value = '';
+    sendBtn.disabled = true;
+  };
 
-       fetch('http://localhost:8080/chat/api', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      emisor: 'Yo', // Puedes reemplazar con el nombre del usuario actual
-      receptor: currentChat,
-      contenido: text,
-      esAudio: false
-    })
-  }).then(res => {
-    if (!res.ok) {
-      console.error("Error al guardar el mensaje en el backend.");
-    }
-    return res.json();
-  }).then(data => {
-    console.log("Mensaje guardado:", data);
-  }).catch(err => {
-    console.error("Error de red o backend:", err);
-  });
-    }
+  // Función para añadir mensaje al chat activo
+  function sendMessage(msg) {
+    if (!activeChatId) return;
+    const chat = chats.find(c => c.id === activeChatId);
+    if (!chat) return;
+    chat.messages.push({
+      ...msg,
+      sent: true,
+      timestamp: Date.now(),
+    });
+    renderActiveChat();
+    // Enviar mensaje al backend
+    fetch('http://localhost:8080/mensajes/api', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    emisor: msg.emisor,
+    receptor: msg.receptor,
+    contenido: msg.contenido,
+    esAudio: msg.esAudio || false
+  }),
+})
+.then(res => res.json())
+.then(data => {
+  console.log('Mensaje guardado:', data);
+  // Luego recargar mensajes con GET
+  return fetch(`http://localhost:8080/mensajes/api/${msg.emisor}/${msg.receptor}`);
+})
+.then(res => res.json())
+.then(mensajesActualizados => {
+  console.log('Mensajes actualizados:', mensajesActualizados);
+  // Aquí actualiza tu UI con los mensajes nuevos
+  actualizarUI(mensajesActualizados);
+})
+.catch(err => console.error('Error:', err));
 
-    // Grabación audio Push-to-talk
-    let mediaRecorder;
-    let audioChunks = [];
+  }
 
-    const micBtn = document.getElementById('micBtn');
+  async function cargarMensajesDesdeServidor() {
+  try {
+    const res = await fetch('http://localhost:8080/mensajes/api');
+const todosLosMensajes = await res.json();
 
-    async function startRecording() {
-      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Tu navegador no soporta grabación de audio.');
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        mediaRecorder.start();
-
-        micBtn.classList.add('recording');
-
-        mediaRecorder.ondataavailable = e => {
-          audioChunks.push(e.data);
-        }
-
-        mediaRecorder.onstop = e => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-
-          if(!chatMessages[currentChat]) chatMessages[currentChat] = [];
-          chatMessages[currentChat].push({ type: 'audio', src: audioUrl });
-
-          renderMessages(currentChat);
-          stream.getTracks().forEach(t => t.stop());
-          micBtn.classList.remove('recording');
-        }
-      } catch (err) {
-        alert('No se pudo acceder al micrófono.');
-      }
-    }
-
-    document.getElementById('messageInput').addEventListener('keypress', function(e) {
-    if(e.key === 'Enter') {
-        sendMessage();
-    }
-});
-
-    function stopRecording() {
-      if(mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
-    }
-
-
-    // Modal de perfil
-    const modal = document.getElementById('profileModal');
-    const modalAvatar = document.getElementById('modalAvatar');
-    const modalName = document.getElementById('modalName');
-    const modalStars = document.getElementById('modalStars');
-    const modalCreated = document.getElementById('modalCreated');
-    const modalObjectDesc = document.getElementById('modalObjectDesc');
-    const modalCloseBtn = document.getElementById('profileModalClose');
-
-    function openProfile(event, name) {
-      if(event) event.stopPropagation();
-      if(!profileData[name]) return;
-      modalAvatar.src = avatars[name];
-      modalName.textContent = name;
-      modalStars.innerHTML = renderStars(profileData[name].stars);
-      modalCreated.textContent = 'Creado: ' + profileData[name].created;
-      modalObjectDesc.textContent = profileData[name].objectDesc;
-      modal.classList.add('active');
-    }
-
-    function closeProfile() {
-      modal.classList.remove('active');
-    }
-
-    modalCloseBtn.addEventListener('click', closeProfile);
-    modal.addEventListener('click', (e) => {
-      if(e.target === modal) closeProfile();
+    // Distribuir mensajes a cada chat según chatId
+    chats.forEach(chat => {
+      chat.messages = todosLosMensajes.filter(msg => msg.chatId === chat.id);
     });
 
-    // Renderizar estrellas (de 1 a 5)
-    function renderStars(n) {
-      const fullStar = '★';
-      const emptyStar = '☆';
-      return fullStar.repeat(n) + emptyStar.repeat(5 - n);
+    renderActiveChat();
+  } catch (err) {
+    console.error('Error al cargar mensajes del servidor:', err);
+  }
+}
+
+
+  // Mostrar/ocultar sticker picker
+  btnStickers.onclick = () => {
+    if (stickerPicker.style.display === 'block') {
+      stickerPicker.style.display = 'none';
+    } else {
+      stickerPicker.style.display = 'block';
     }
+  };
 
-    // Inicialización
-    selectChat(currentChat);
+  // Cerrar sticker picker si se clickea fuera
+  document.addEventListener('click', e => {
+    if (!btnStickers.contains(e.target) && !stickerPicker.contains(e.target)) {
+      stickerPicker.style.display = 'none';
+    }
+  });
 
-    function enviarMensaje(text) {
-  fetch('/chat', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      emisor: usuario1,
-      receptor: usuario2,
-      contenido: text,
-      esAudio: false
-    })
-  })
-  .then(res => res.json())
-  .then(mensajeGuardado => {
-    console.log('Mensaje guardado', mensajeGuardado);
-    cargarMensajes(); // recarga mensajes después de enviar
-  })
-  .catch(console.error);
-}
+  // Manejar imagenes adjuntas
+  inputImage.onchange = () => {
+    const file = inputImage.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      sendMessage({ type: 'image', content: reader.result });
+      inputImage.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
 
-const usuario1 = 'user'; // usuario actual, cambiar según login
-const usuario2 = 'clarita'; // receptor seleccionado
+  // Manejar audios adjuntos
+  inputAudio.onchange = () => {
+    const file = inputAudio.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      sendMessage({ type: 'audio', content: reader.result });
+      inputAudio.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
 
-function cargarMensajes() {
-  fetch(`/chat/api${usuario1}/${usuario2}`)
-    .then(res => res.json())
-    .then(mensajes => {
-      const chatBox = document.getElementById('chatBox');
-      chatBox.innerHTML = ''; // limpia antes
-      mensajes.forEach(mensaje => {
-        const div = document.createElement('div');
-        div.className = mensaje.emisor === usuario1 ? 'message sent' : 'message received';
-        if (mensaje.esAudio) {
-          const audio = document.createElement('audio');
-          audio.controls = true;
-          audio.src = mensaje.contenido; // asumiendo URL válida
-          div.appendChild(audio);
-        } else {
-          div.textContent = mensaje.contenido;
-        }
-        chatBox.appendChild(div);
-      });
-    })
-    .catch(console.error);
-}
+  // Inicializar renderizado
+  renderChats();
+  cargarMensajesDesdeServidor();
 
-// Llamar para cargar mensajes al iniciar la vista
-cargarMensajes();
-
-
-  </script>
+</script>
 
 </body>
 </html>

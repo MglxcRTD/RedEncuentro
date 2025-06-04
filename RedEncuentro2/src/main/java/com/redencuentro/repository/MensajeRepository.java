@@ -13,4 +13,9 @@ public interface MensajeRepository extends JpaRepository<Mensaje, Long> {
            "(m.emisor = :user2 AND m.receptor = :user1) " +
            "ORDER BY m.fechaEnvio ASC")
     List<Mensaje> encontrarMensajesEntreUsuarios(@Param("user1") String user1, @Param("user2") String user2);
+    @Query("SELECT DISTINCT CASE WHEN m.emisor = :usuario THEN m.receptor ELSE m.emisor END " +
+    	       "FROM Mensaje m " +
+    	       "WHERE m.emisor = :usuario OR m.receptor = :usuario")
+    	List<String> encontrarContactosDelUsuario(@Param("usuario") String usuario);
+
 }

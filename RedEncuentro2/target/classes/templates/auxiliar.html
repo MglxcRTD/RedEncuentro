@@ -572,49 +572,8 @@ chatHeaderEl.appendChild(nameEl);
       timestamp: Date.now(),
     });
     renderActiveChat();
-    // Enviar mensaje al backend
-    fetch('http://localhost:8080/mensajes/api', {
-  method: 'POST',
-  headers: {'Content-Type': 'application/json'},
-  body: JSON.stringify({
-    emisor: msg.emisor,
-    receptor: msg.receptor,
-    contenido: msg.contenido,
-    esAudio: msg.esAudio || false
-  }),
-})
-.then(res => res.json())
-.then(data => {
-  console.log('Mensaje guardado:', data);
-  // Luego recargar mensajes con GET
-  return fetch(`http://localhost:8080/mensajes/api/${msg.emisor}/${msg.receptor}`);
-})
-.then(res => res.json())
-.then(mensajesActualizados => {
-  console.log('Mensajes actualizados:', mensajesActualizados);
-  // Aquí actualiza tu UI con los mensajes nuevos
-  actualizarUI(mensajesActualizados);
-})
-.catch(err => console.error('Error:', err));
-
+    
   }
-
-  async function cargarMensajesDesdeServidor() {
-  try {
-    const res = await fetch('http://localhost:8080/mensajes/api');
-const todosLosMensajes = await res.json();
-
-    // Distribuir mensajes a cada chat según chatId
-    chats.forEach(chat => {
-      chat.messages = todosLosMensajes.filter(msg => msg.chatId === chat.id);
-    });
-
-    renderActiveChat();
-  } catch (err) {
-    console.error('Error al cargar mensajes del servidor:', err);
-  }
-}
-
 
   // Mostrar/ocultar sticker picker
   btnStickers.onclick = () => {
@@ -658,8 +617,6 @@ const todosLosMensajes = await res.json();
 
   // Inicializar renderizado
   renderChats();
-  cargarMensajesDesdeServidor();
-
 </script>
 
 </body>
